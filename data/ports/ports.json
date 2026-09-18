@@ -1,0 +1,10 @@
+[
+{"name":"Mumbai","country":"India","latitude":18.94,"longitude":72.84,"approach_lat":18.6,"approach_lon":72.4},
+{"name":"Nhava Sheva / JNPT","country":"India","latitude":18.95,"longitude":72.95,"approach_lat":18.55,"approach_lon":72.55},
+{"name":"Kochi","country":"India","latitude":9.97,"longitude":76.26,"approach_lat":9.9,"approach_lon":75.95},
+{"name":"Chennai","country":"India","latitude":13.1,"longitude":80.3,"approach_lat":13.05,"approach_lon":80.6},
+{"name":"Visakhapatnam","country":"India","latitude":17.69,"longitude":83.3,"approach_lat":17.4,"approach_lon":83.6},
+{"name":"Singapore","country":"Singapore","latitude":1.26,"longitude":103.84,"approach_lat":1.05,"approach_lon":103.65},
+{"name":"Colombo","country":"Sri Lanka","latitude":6.95,"longitude":79.84,"approach_lat":6.9,"approach_lon":79.55},
+{"name":"Jebel Ali / Dubai","country":"UAE","latitude":25.0,"longitude":55.05,"approach_lat":25.25,"approach_lon":54.75}
+]

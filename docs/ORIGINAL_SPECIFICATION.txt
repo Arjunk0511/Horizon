@@ -1,0 +1,1114 @@
+You are a senior full-stack software engineer, maritime software architect, GIS developer, and Python optimization engineer.
+
+I want you to help me build my complete final-year Software Engineering project from scratch. Do not only provide an explanation, pseudocode, UI mockup, or partial prototype. I want a WORKING LOCAL PROJECT that I can run, test, demonstrate, and later deploy.
+
+PROJECT NAME:
+Horizon
+
+PROJECT TITLE:
+Horizon – Weather-Aware Maritime Route Optimization System
+
+PROJECT PURPOSE:
+Horizon is a maritime voyage planning and route optimization platform. It should help a ship operator plan a route between two ports while considering marine weather conditions, maritime constraints, distance, estimated fuel consumption, travel time, CO₂ emissions, and safety.
+
+The system should compare a normal/shortest maritime route with a weather-aware optimized route and visualize both on an interactive map.
+
+The project must be realistic enough for a final-year engineering demonstration but should remain practical to build and run locally.
+
+==================================================
+1. REQUIRED TECHNOLOGY STACK
+==================================================
+
+Frontend:
+- React.js
+- JavaScript
+- HTML/CSS
+- Leaflet.js with OpenStreetMap
+- Axios
+- Responsive dashboard UI
+
+Backend:
+- Python
+- FastAPI preferred
+- Uvicorn
+- Pydantic
+- SQLAlchemy
+
+Database:
+- PostgreSQL
+- PostGIS if available
+
+For easier initial development:
+- Allow SQLite as a fallback database
+- Design the database layer so PostgreSQL/PostGIS can later replace SQLite without rewriting the whole application
+
+Algorithms:
+- A* as the main route optimization algorithm
+- Dijkstra as an alternative/reference algorithm
+
+External data:
+- Marine weather API
+- AIS vessel tracking service
+- OpenStreetMap / geospatial data
+
+IMPORTANT:
+The project must still work for demonstration if external APIs are unavailable, rate-limited, require paid subscriptions, or do not provide suitable data.
+
+Therefore implement:
+1. Live API mode
+2. Mock/demo data mode
+
+Never fabricate live API results and present them as real.
+Clearly identify mock data in the application.
+
+==================================================
+2. SYSTEM ACTORS
+==================================================
+
+The project documentation uses exactly these 7 actors:
+
+1. Maritime Planner / Ship Operator
+2. Fleet Manager / Shipping Company
+3. System Administrator
+4. Marine Weather API
+5. AIS Service
+6. Mapping / Geospatial Service
+7. Notification Service
+
+Keep the implementation consistent with these actors.
+
+==================================================
+3. CORE FUNCTIONAL MODULES
+==================================================
+
+Implement these modules:
+
+A. USER MANAGEMENT
+
+Features:
+- Register
+- Login
+- Logout
+- User profile
+- Role-based access
+
+Roles:
+- Maritime Planner / Ship Operator
+- Fleet Manager
+- Administrator
+
+Use secure password hashing.
+Use JWT authentication.
+
+--------------------------------------------------
+B. VESSEL MANAGEMENT
+
+Allow users to create and manage vessel profiles.
+
+Suggested vessel fields:
+
+- vessel_id
+- vessel_name
+- IMO number
+- vessel_type
+- length
+- beam
+- draft
+- cruising_speed
+- maximum_speed
+- fuel_consumption_rate
+- fuel_type
+- maximum_wave_height
+- maximum_wind_speed
+
+Include some demo vessels so the project can be tested immediately.
+
+--------------------------------------------------
+C. PORT MANAGEMENT
+
+Create a port dataset containing major ports.
+
+Each port should contain:
+
+- port_id
+- port_name
+- country
+- latitude
+- longitude
+
+Include several Indian and international ports for demonstration.
+
+Examples:
+- Mumbai
+- Nhava Sheva / JNPT
+- Kochi
+- Chennai
+- Visakhapatnam
+- Singapore
+- Colombo
+- Dubai / Jebel Ali
+
+Users should be able to select:
+
+Source Port
+Destination Port
+
+--------------------------------------------------
+D. VOYAGE PLANNING
+
+Create a voyage planning form.
+
+Inputs:
+
+- Source port
+- Destination port
+- Vessel
+- Departure date/time
+- Safety preference
+- Optimization preference
+
+Optimization preference can include:
+
+- Balanced
+- Safest
+- Fuel Efficient
+- Shortest
+
+When the user submits the voyage:
+
+Backend should retrieve relevant environmental data and calculate candidate routes.
+
+--------------------------------------------------
+E. MARINE WEATHER MODULE
+
+Retrieve or simulate:
+
+- Wind speed
+- Wind direction
+- Wave height
+- Wave direction
+- Ocean/current speed where available
+- Current direction where available
+- Weather condition
+- Timestamp
+- Latitude
+- Longitude
+
+Create a clean service abstraction such as:
+
+weather_service.py
+
+It should support:
+
+get_weather(lat, lon, time)
+
+and preferably:
+
+get_weather_for_route(route_points)
+
+Do not tightly couple route optimization to one weather provider.
+
+Use environment variables for API keys.
+
+Example:
+
+WEATHER_API_KEY=
+AIS_API_KEY=
+
+Provide mock weather data when keys are absent.
+
+--------------------------------------------------
+F. AIS MODULE
+
+Create:
+
+ais_service.py
+
+AIS should provide:
+
+- vessel latitude
+- vessel longitude
+- speed over ground
+- course over ground
+- timestamp
+
+If a real AIS API is unavailable, implement a simulator that moves the vessel progressively along the calculated route.
+
+The monitoring dashboard should therefore still work during our college demonstration.
+
+--------------------------------------------------
+G. MARITIME ROUTE GENERATION
+
+THIS IS VERY IMPORTANT.
+
+Do NOT calculate maritime routes as a simple straight line through land.
+
+Create a maritime navigation grid or graph.
+
+Nodes should represent navigable ocean/sea coordinates.
+
+Edges should represent possible vessel movement.
+
+Prevent routes from crossing obvious land areas.
+
+Use an appropriate land mask / geospatial approach.
+
+The algorithm should operate on this graph.
+
+Implement:
+
+A*
+and
+Dijkstra
+
+Use Haversine distance for geographical distance calculations.
+
+--------------------------------------------------
+H. WEATHER-AWARE ROUTE OPTIMIZATION
+
+This is the main feature of Horizon.
+
+For each graph edge/node calculate a cost.
+
+Conceptually:
+
+Total Cost =
+w1 × Distance Cost
++ w2 × Weather Risk
++ w3 × Fuel Cost
++ w4 × Time Cost
++ w5 × Safety Penalty
+
+Normalize individual cost components before combining them where necessary.
+
+Weather risk should consider:
+
+- wave height
+- wind speed
+- current
+- vessel safety thresholds
+
+Example concept:
+
+weatherRisk =
+waveRisk +
+windRisk +
+currentRisk
+
+If:
+
+wave_height > vessel.max_wave_height
+
+or
+
+wind_speed > vessel.max_wind_speed
+
+then the node/edge should receive a very large safety penalty or become non-navigable.
+
+The optimized route should therefore be capable of going around dangerous weather rather than simply selecting the geometrically shortest path.
+
+Create configurable weights.
+
+Example:
+
+Balanced:
+distance = 0.30
+weather = 0.30
+fuel = 0.20
+time = 0.10
+safety = 0.10
+
+These weights are examples.
+Design them so they can be adjusted.
+
+==================================================
+4. BASELINE VS OPTIMIZED ROUTE
+==================================================
+
+For every voyage calculate at least:
+
+ROUTE A:
+Baseline / shortest safe maritime route
+
+ROUTE B:
+Weather-aware optimized route
+
+Compare:
+
+- Total distance
+- Estimated duration
+- Estimated fuel consumption
+- Estimated CO₂ emissions
+- Weather risk
+- Safety status
+
+The optimized route does NOT always have to be shorter.
+
+For example:
+
+Baseline:
+Distance = 950 km
+Fuel = 32 tonnes
+Risk = High
+
+Optimized:
+Distance = 1010 km
+Fuel = 31 tonnes
+Risk = Low
+
+This demonstrates that a slightly longer route may be safer or more efficient.
+
+==================================================
+5. FUEL CONSUMPTION
+==================================================
+
+Create:
+
+fuel_calculator.py
+
+Do not simply generate random fuel numbers.
+
+Use a documented simplified engineering model suitable for an academic prototype.
+
+At minimum consider:
+
+- vessel fuel consumption rate
+- vessel speed
+- travel time
+- distance
+- weather resistance factor
+
+Conceptually:
+
+Fuel =
+FuelRate × TravelTime × WeatherFactor
+
+Explain assumptions in comments and README.
+
+==================================================
+6. CO₂ EMISSION CALCULATION
+==================================================
+
+Create:
+
+emission_calculator.py
+
+Conceptually:
+
+CO2 =
+FuelConsumed × EmissionFactor
+
+Emission factor should depend on fuel type where possible.
+
+Keep emission factors configurable and document their source/assumption.
+
+==================================================
+7. TRAVEL TIME
+==================================================
+
+Calculate estimated travel time using:
+
+distance
+vessel cruising speed
+weather effects
+current effects where available
+
+Do not use random values.
+
+==================================================
+8. INTERACTIVE MAP
+==================================================
+
+Create a professional maritime map dashboard using Leaflet and OpenStreetMap.
+
+Display:
+
+Source port marker
+Destination port marker
+
+Baseline route
+Optimized route
+
+Use visually different route styles.
+
+Also display:
+
+Dangerous weather zones
+Weather markers
+Current vessel location
+Ports
+
+When a user clicks a route point/weather marker show:
+
+Latitude
+Longitude
+Wave height
+Wind speed
+Weather risk
+
+Provide a legend.
+
+==================================================
+9. WEATHER HAZARD VISUALIZATION
+==================================================
+
+Create weather risk levels:
+
+LOW
+MEDIUM
+HIGH
+CRITICAL
+
+For example:
+
+Green = Low
+Yellow = Medium
+Orange = High
+Red = Critical
+
+Thresholds should be configurable by the administrator.
+
+==================================================
+10. VOYAGE MONITORING
+==================================================
+
+Create a monitoring page.
+
+Display:
+
+- Current vessel position
+- Current speed
+- Current weather
+- Route progress
+- Remaining distance
+- Estimated arrival time
+- Current risk level
+- Active alerts
+
+Simulate vessel movement when AIS API is unavailable.
+
+Provide a button:
+
+"Simulate Next Position"
+
+or an automatic timer for demo mode.
+
+==================================================
+11. DYNAMIC ROUTE RECALCULATION
+==================================================
+
+During an active voyage:
+
+1. Retrieve updated weather.
+2. Retrieve updated AIS position.
+3. Analyze the remaining route.
+4. Detect whether upcoming nodes have become dangerous.
+5. Trigger an alert.
+6. Recalculate the route from the current vessel position.
+7. Display the new route.
+
+Keep route history.
+
+Example alert:
+
+"High wave conditions detected 120 km ahead.
+Wave Height: 5.2 m
+Route recalculation recommended."
+
+==================================================
+12. NOTIFICATION MODULE
+==================================================
+
+Implement an internal notification system.
+
+Types:
+
+INFO
+WARNING
+CRITICAL
+
+Store alerts in the database.
+
+Optional:
+Email/Telegram integration can be added later.
+
+The project must not depend on those integrations to function.
+
+==================================================
+13. ROUTE COMPARISON PAGE
+==================================================
+
+Create a comparison interface.
+
+Example:
+
+Metric                  Baseline      Optimized
+
+Distance                ...
+Travel Time             ...
+Fuel Consumption        ...
+CO₂ Emissions           ...
+Weather Risk             ...
+Safety                   ...
+
+Also calculate differences such as:
+
+Fuel Saved
+CO₂ Reduced
+Risk Reduction
+Additional Distance
+Time Difference
+
+==================================================
+14. REPORT GENERATION
+==================================================
+
+Allow users to generate a voyage report.
+
+Include:
+
+Voyage information
+Vessel
+Source
+Destination
+Departure
+Selected route
+Route comparison
+Distance
+Travel time
+Fuel
+CO₂
+Weather conditions
+Alerts
+
+PDF generation can be implemented after the main application works.
+
+==================================================
+15. FLEET MANAGER DASHBOARD
+==================================================
+
+Create a Fleet Manager dashboard containing:
+
+- Active voyages
+- Completed voyages
+- Fleet vessels
+- Current vessel status
+- Alerts
+- Fuel statistics
+- CO₂ statistics
+- Voyage history
+
+==================================================
+16. ADMIN DASHBOARD
+==================================================
+
+Administrator should be able to:
+
+- Manage users
+- View users
+- Change roles
+- Configure API settings
+- Configure safety thresholds
+- View system logs
+
+Safety settings should include:
+
+Maximum Wave Height
+Maximum Wind Speed
+Risk thresholds
+
+==================================================
+17. DATABASE DESIGN
+==================================================
+
+Create appropriate database models.
+
+Suggested tables:
+
+users
+
+vessels
+
+ports
+
+voyages
+
+routes
+
+route_points
+
+weather_data
+
+ais_positions
+
+alerts
+
+system_settings
+
+route_comparisons
+
+system_logs
+
+Use foreign keys properly.
+
+Create database initialization and seed scripts.
+
+==================================================
+18. API DESIGN
+==================================================
+
+Use REST APIs.
+
+Suggested endpoints:
+
+/api/auth/register
+/api/auth/login
+/api/auth/profile
+
+/api/vessels
+/api/vessels/{id}
+
+/api/ports
+
+/api/voyages
+/api/voyages/{id}
+
+/api/routes/optimize
+/api/routes/compare
+
+/api/weather
+
+/api/monitoring/{voyage_id}
+
+/api/alerts
+
+/api/admin/users
+/api/admin/settings
+/api/admin/logs
+
+Use appropriate:
+
+GET
+POST
+PUT
+DELETE
+
+methods.
+
+==================================================
+19. FRONTEND PAGES
+==================================================
+
+Create:
+
+1. Landing Page
+2. Login
+3. Register
+4. Main Dashboard
+5. Voyage Planner
+6. Route Results
+7. Interactive Route Map
+8. Route Comparison
+9. Voyage Monitoring
+10. Vessel Management
+11. Voyage History
+12. Fleet Manager Dashboard
+13. Admin Dashboard
+14. User Profile
+
+Use a maritime visual theme.
+
+Suggested colors:
+
+Dark navy
+Ocean blue
+White
+Cyan accents
+
+The UI should look like an actual maritime operations dashboard, not a basic student HTML form.
+
+==================================================
+20. DASHBOARD
+==================================================
+
+Main dashboard cards can show:
+
+Active Voyages
+Fleet Vessels
+Routes Optimized
+Fuel Saved
+CO₂ Reduced
+Active Alerts
+
+Also include:
+
+Recent Voyages
+Weather Alerts
+Map overview
+
+==================================================
+21. REQUIRED PROJECT STRUCTURE
+==================================================
+
+Create a professional structure similar to:
+
+horizon/
+│
+├── backend/
+│   ├── app/
+│   │   ├── main.py
+│   │   ├── config.py
+│   │   ├── database.py
+│   │
+│   │   ├── models/
+│   │   ├── schemas/
+│   │   ├── routes/
+│   │   ├── services/
+│   │   │   ├── weather_service.py
+│   │   │   ├── ais_service.py
+│   │   │   ├── route_optimizer.py
+│   │   │   ├── fuel_calculator.py
+│   │   │   ├── emission_calculator.py
+│   │   │   └── notification_service.py
+│   │   │
+│   │   ├── algorithms/
+│   │   │   ├── astar.py
+│   │   │   ├── dijkstra.py
+│   │   │   └── maritime_graph.py
+│   │   │
+│   │   └── utils/
+│   │
+│   ├── tests/
+│   ├── requirements.txt
+│   └── .env.example
+│
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── services/
+│   │   ├── hooks/
+│   │   ├── utils/
+│   │   └── App.jsx
+│   │
+│   └── package.json
+│
+├── data/
+│   ├── ports/
+│   ├── mock_weather/
+│   └── maritime/
+│
+├── docs/
+│
+├── README.md
+├── .gitignore
+└── docker-compose.yml
+
+You may improve this architecture where appropriate, but explain major changes.
+
+==================================================
+22. DEMO MODE
+==================================================
+
+THIS IS ESSENTIAL.
+
+I need to demonstrate the project in college even without paid APIs.
+
+Create:
+
+DEMO_MODE=true
+
+When DEMO_MODE=true:
+
+- Use local port dataset
+- Generate deterministic mock weather
+- Simulate AIS positions
+- Generate realistic hazard zones
+- Allow route optimization
+- Allow route comparison
+- Allow monitoring
+- Allow route recalculation
+- Allow alerts
+
+Mock weather should be deterministic/reproducible rather than completely random so the same demo voyage produces understandable results.
+
+Create at least one prepared scenario where:
+
+1. The shortest route intersects dangerous weather.
+2. The optimized route avoids that weather.
+3. The optimized route appears visibly different on the map.
+4. The system shows the difference in risk, distance, fuel, time and CO₂.
+
+This scenario is critical for demonstrating the purpose of the project.
+
+==================================================
+23. TESTING
+==================================================
+
+Add tests for:
+
+Authentication
+Weather risk calculation
+Haversine distance
+A*
+Dijkstra
+Fuel calculation
+CO₂ calculation
+Route optimization
+Safety threshold detection
+Route recalculation
+
+Also provide manual test scenarios.
+
+==================================================
+24. SECURITY
+==================================================
+
+Implement:
+
+Password hashing
+JWT authentication
+Input validation
+Role-based access control
+Environment variables
+CORS configuration
+Error handling
+
+Never hardcode API secrets.
+
+==================================================
+25. README
+==================================================
+
+Create a complete README containing:
+
+Project overview
+Problem statement
+Objectives
+Features
+Architecture
+Technology stack
+Installation
+Backend setup
+Frontend setup
+Database setup
+Environment variables
+Demo mode
+API configuration
+How route optimization works
+How fuel calculation works
+How emissions are calculated
+Screenshots section placeholders
+Testing
+Future scope
+
+==================================================
+26. IMPORTANT DEVELOPMENT RULES
+==================================================
+
+Follow these rules throughout development:
+
+1. Do not give me thousands of lines of code in one response.
+
+2. Build the project PHASE BY PHASE.
+
+3. Every phase must produce runnable code.
+
+4. Do not proceed to the next phase until the current phase is working.
+
+5. Whenever you create or modify a file, give:
+   - exact file path
+   - complete code
+   - commands to run it
+
+6. Never use placeholders such as:
+   "rest of code here"
+   "implement later"
+   "same as above"
+   "add your logic"
+   for functionality belonging to the current phase.
+
+7. Do not create fake integrations and call them real APIs.
+
+8. If an API cannot be used without credentials, implement the interface plus mock/demo implementation.
+
+9. Keep frontend and backend contracts synchronized.
+
+10. Explain errors when they occur instead of rewriting unrelated parts of the project.
+
+11. Do not unnecessarily replace working code.
+
+12. Maintain a running checklist:
+   [DONE]
+   [IN PROGRESS]
+   [PENDING]
+
+13. Keep a record of all created files.
+
+14. Give Windows PowerShell commands because I am developing primarily on Windows 11 using VS Code.
+
+15. After each phase, tell me exactly how to verify that it works.
+
+16. Use Git-friendly development practices and tell me when a good commit point has been reached.
+
+17. Do not silently change the project requirements.
+
+==================================================
+27. DEVELOPMENT PHASES
+==================================================
+
+Follow approximately this order:
+
+PHASE 1
+Project initialization and folder structure
+
+PHASE 2
+FastAPI backend + database connection
+
+PHASE 3
+Authentication and users
+
+PHASE 4
+Ports and vessels
+
+PHASE 5
+React dashboard and authentication frontend
+
+PHASE 6
+Voyage planning
+
+PHASE 7
+Maritime graph and geographic utilities
+
+PHASE 8
+A* and Dijkstra implementation
+
+PHASE 9
+Marine weather service + demo weather
+
+PHASE 10
+Weather-aware route optimization
+
+PHASE 11
+Fuel, travel time and CO₂ estimation
+
+PHASE 12
+Interactive Leaflet maritime map
+
+PHASE 13
+Baseline vs optimized route comparison
+
+PHASE 14
+AIS integration/simulator
+
+PHASE 15
+Voyage monitoring
+
+PHASE 16
+Dynamic weather alerts and route recalculation
+
+PHASE 17
+Fleet Manager dashboard
+
+PHASE 18
+Admin dashboard
+
+PHASE 19
+Reports and voyage history
+
+PHASE 20
+Testing, bug fixing and final documentation
+
+==================================================
+28. FINAL ACCEPTANCE TEST
+==================================================
+
+The project should not be considered complete until I can perform this workflow:
+
+1. Start backend.
+2. Start frontend.
+3. Register/login.
+4. Add/select vessel.
+5. Select source and destination ports.
+6. Select departure time.
+7. Generate route.
+8. See baseline maritime route.
+9. Retrieve/simulate weather.
+10. See dangerous weather areas.
+11. Generate weather-aware optimized route.
+12. See both routes on map.
+13. Compare distance.
+14. Compare travel time.
+15. Compare fuel consumption.
+16. Compare CO₂ emissions.
+17. See safety/risk comparison.
+18. Start voyage monitoring.
+19. See simulated/current AIS position.
+20. Trigger a weather hazard.
+21. Receive an alert.
+22. Recalculate route.
+23. See updated route.
+24. Save voyage.
+25. View voyage history.
+
+==================================================
+29. ACADEMIC CONSISTENCY
+==================================================
+
+The implemented project must remain consistent with my Software Engineering documentation.
+
+The documented core use cases are:
+
+Register
+Login
+Manage Profile
+Manage Vessel
+Create Voyage Plan
+Generate Optimized Route
+Retrieve Weather Data
+Analyze Weather Conditions
+Estimate Fuel Consumption
+Estimate Travel Time
+Calculate CO₂ Emissions
+Monitor Voyage
+Track Vessel Position
+Generate Alert
+Recalculate Route
+View Interactive Map
+Compare Routes
+Generate Report
+Manage Users
+Configure Weather API
+Manage Safety Thresholds
+View System Logs
+
+Do not remove these core use cases.
+
+==================================================
+30. START NOW
+==================================================
+
+Before writing code:
+
+1. Analyze the complete specification.
+2. Identify technical risks or dependencies that could prevent the project from running.
+3. Give me the finalized architecture.
+4. Give me the finalized folder structure.
+5. Give me the development checklist for all phases.
+
+Then immediately begin PHASE 1.
+
+For Phase 1 provide:
+
+- PowerShell commands
+- Folder structure
+- required installations
+- backend initialization
+- frontend initialization
+- environment configuration
+- initial README
+- exact run commands
+
+At the end provide a PHASE 1 VERIFICATION CHECKLIST.
+
+Do not jump ahead and generate the whole application in one response.

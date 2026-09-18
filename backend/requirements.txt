@@ -1,0 +1,11 @@
+-c constraints.txt
+fastapi==0.141.1
+uvicorn==0.53.0
+pydantic-settings==2.15.0
+SQLAlchemy==2.0.54
+PyJWT==2.14.0
+pwdlib[argon2]==0.3.1
+shapely==2.1.2
+httpx==0.28.1
+reportlab==5.0.1
+psycopg[binary]==3.3.5
